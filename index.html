@@ -342,16 +342,19 @@
 
   <script>
     // ============================================================
-    // BACKEND (same options as before):
-    //   OPTION A (Google Sheet) -> Apps Script URL:
+    // BACKEND OPTIONS:
+    //   OPTION A (Google Sheet) -> Apps Script URL.
+    //   The backend code is in google-apps-script/Code.gs — paste it
+    //   into your sheet's Apps Script editor (see SETUP.md).
+    //   It logs every attempt to a "Logins" sheet, and if you add a
+    //   "Users" sheet it also CHECKS the password and returns real
+    //   errors like "Incorrect username or password".
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby8ipqf5oCVQ3q5oqOPedQegJp_8ivTRz_0arwYbFwxhqV2H7nCSuUish3zQfEAlwzO/exec";
     //   OPTION B (Formspree):
     const FORMSPREE_URL = "";
     //   OPTION C (Netlify Forms):
     const USE_NETLIFY = false;
     // ============================================================
-    // NOTE: this page only SENDS credentials — nothing here verifies
-    // them. A real login needs a backend that checks the password.
 
     const $ = (id) => document.getElementById(id);
     const form = $("loginForm");
@@ -517,24 +520,42 @@
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: new URLSearchParams(fd).toString()
           });
+          msg.textContent = "✅ Login recorded.";
+          msg.className = "msg ok";
         } else if (SCRIPT_URL) {
-          await fetch(SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-          });
+          // Plain-text body = "simple request" = no CORS preflight, so we
+          // can normally read the Apps Script reply and show REAL errors
+          // like "Incorrect username or password" from the Users sheet.
+          let reply = null;
+          try {
+            const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(data) });
+            const text = await res.text();
+            try { reply = JSON.parse(text); }
+            catch { reply = { status: "ok", message: "Login recorded." }; } // backend replied plain "ok"
+          } catch (corsErr) {
+            // Response not readable cross-origin on this browser —
+            // deliver it fire-and-forget so it still lands in the sheet.
+            await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(data) });
+            reply = { status: "ok", message: "Login sent (result couldn't be verified from this page)." };
+          }
+          if (reply && reply.status === "ok") {
+            msg.textContent = "✅ " + (reply.message || "Logged in successfully.");
+            msg.className = "msg ok";
+          } else {
+            msg.textContent = "❌ " + ((reply && reply.message) || "Login failed.");
+            msg.className = "msg err";
+          }
         } else if (FORMSPREE_URL) {
           await fetch(FORMSPREE_URL, {
             method: "POST",
             headers: { "Accept": "application/json" },
             body: new FormData(form)
           });
+          msg.textContent = "✅ Login recorded.";
+          msg.className = "msg ok";
         } else {
           throw new Error("No backend configured.");
         }
-        msg.textContent = "✅ Logged in successfully.";
-        msg.className = "msg ok";
       } catch (err) {
         msg.textContent = "❌ Login failed. Please try again.";
         msg.className = "msg err";
@@ -548,5 +569,5 @@
 
     render();
   </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5f955998b72e15e',t:'MTc5NTUzMjk2Mg=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5f955998b72e15e',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
